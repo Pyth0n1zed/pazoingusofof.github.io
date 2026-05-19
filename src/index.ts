@@ -26,9 +26,9 @@ async function init() {
 
 if (app) {
   app.innerHTML = `
-    <img src="${logo}" alt="Logo" class="logo" />
+    <div class="logo-container"><img src="${logo}" alt="Logo" class="logo" /></div>
     <h1>Welcome to Deployable!</h1>
-    <iframe id="proxy-frame" style="width: 100vw; height: 50vh; border: none;"></iframe>
+    <iframe id="proxy-frame"></iframe>
   `;
 }
 

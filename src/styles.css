@@ -17,6 +17,21 @@ h1 {
   font-size: 3.5rem;
 }
 
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 0%;
+}
+
 .logo {
-  width: 670px;
+  width: 400px;
+}
+
+#proxy-frame {
+  width: 70vw;
+  height: 50vh;
+  position: relative;
+  border: 4px solid #05b7ff;
+  border-radius: 4px;
 }
