@@ -21,7 +21,7 @@ async function init() {
     "https://unpkg.com/@mercuryworkshop/libcurl-transport@1/dist/index.mjs",
     [
       {
-        websocket: "wss://anura.pro/",
+        websocket: "wss://gointospace.app/",
         wasm: "https://unpkg.com/libcurl.js/libcurl.wasm",
       },
     ],
