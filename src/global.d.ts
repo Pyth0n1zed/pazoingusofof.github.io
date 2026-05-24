@@ -11,5 +11,6 @@ declare const $scramjetLoadController: () => any;
 declare const $scramjetLoadClient: () => any;
 declare const $scramjetLoadWorker: () => any;
 declare const $scramjetVersion: any;
+declare const Lumin: any;
 
 declare const LibcurlTransport: any;
