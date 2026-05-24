@@ -21,6 +21,101 @@ body {
   flex-direction: column;
 }
 
+#tab-bar {
+  display: flex;
+  align-items: center;
+  background: #0a0a0a;
+  padding: 8px 8px 0 8px;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid #222;
+}
+
+#tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #111;
+  border: 1px solid #222;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  max-width: 200px;
+  min-width: 100px;
+  transition:
+    background 0.2s,
+    color 0.2s;
+  user-select: none;
+  white-space: nowrap;
+  position: relative;
+}
+
+.tab:hover {
+  background: #1a1a1a;
+  color: #ccc;
+}
+
+.tab.active {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #333;
+}
+
+.tab-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab-favicon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.tab-close {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.tab-close:hover {
+  background: #333;
+}
+
+#new-tab-btn {
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 18px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+#new-tab-btn:hover {
+  background: #1a1a1a;
+  color: #fff;
+}
+
 #topbar {
   display: flex;
   align-items: center;
@@ -74,12 +169,23 @@ body {
   background: #2a2a2a;
 }
 
-#proxy-frame {
+#frames-container {
   flex: 1;
-  width: 100%;
-  border: none;
-  display: block;
+  position: relative;
   background: #fff;
+}
+
+.proxy-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: none;
+}
+
+.proxy-frame.active {
+  display: block;
 }
 
 #settings-btn {
@@ -125,6 +231,83 @@ body {
   font-size: 13px;
   color: #ccc;
   margin-bottom: 6px;
+}
+
+#wisp-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+#wisp-input:focus {
+  border-color: #555;
+}
+
+.settings-hint {
+  margin: 8px 0 18px;
+  font-size: 12px;
+  color: #888;
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.settings-actions-right {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-actions button {
+  padding: 9px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.settings-actions button:hover {
+  background: #222;
+  border-color: #444;
+}
+
+.settings-actions button:active {
+  background: #2a2a2a;
+}
+
+#settings-save {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+#settings-save:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+@keyframes settings-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 #wisp-input {

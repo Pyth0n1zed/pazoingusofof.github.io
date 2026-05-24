@@ -13,9 +13,17 @@ const getWispServer = () =>
 const setWispServer = (url: string) =>
   localStorage.setItem(WISP_STORAGE_KEY, url);
 
-let currentUrl = "";
-let history: string[] = [];
-let index = -1;
+interface Tab {
+  id: string;
+  url: string;
+  history: string[];
+  historyIndex: number;
+  frame: HTMLIFrameElement;
+  tabElement: HTMLElement;
+}
+
+let tabs: Tab[] = [];
+let activeTab: Tab | null = null;
 let bareMuxConnection: any = null;
 
 async function applyTransport(wispUrl: string) {
@@ -151,8 +159,19 @@ const startPageHTML = `
 const homeDataURL =
   "data:text/html;charset=utf-8," + encodeURIComponent(startPageHTML);
 
+const normalizeUrl = (u: string) => {
+  try {
+    return new URL(u).href;
+  } catch {
+    return u;
+  }
+};
+
 if (app) {
   app.innerHTML = `
+    <div id="tab-bar">
+      <button id="new-tab-btn" title="New Tab">+</button>
+    </div>
     <div id="topbar">
       <button id="back-btn" title="Back">&#8592;</button>
       <button id="forward-btn" title="Forward">&#8594;</button>
@@ -161,7 +180,7 @@ if (app) {
       <button id="go-btn">Go</button>
       <button id="settings-btn" title="Settings" aria-label="Settings">&#9881;</button>
     </div>
-    <iframe id="proxy-frame"></iframe>
+    <div id="frames-container"></div>
     <div id="settings-overlay" hidden>
       <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
         <h2 id="settings-title">Settings</h2>
@@ -180,43 +199,193 @@ if (app) {
   `;
 }
 
-const normalizeUrl = (u: string) => {
-  try {
-    return new URL(u).href;
-  } catch {
-    return u;
-  }
-};
+const framesContainer = document.getElementById(
+  "frames-container",
+) as HTMLDivElement;
+const tabBar = document.getElementById("tab-bar") as HTMLDivElement;
+const urlBar = document.getElementById("url-bar") as HTMLInputElement;
+const newTabBtn = document.getElementById("new-tab-btn") as HTMLButtonElement;
 
-function load(
-  frame: HTMLIFrameElement,
-  urlBar: HTMLInputElement,
+function createTab(url: string = homeDataURL) {
+  const id = Math.random().toString(36).substring(2, 11);
+  const frame = document.createElement("iframe");
+  frame.className = "proxy-frame";
+  frame.id = `frame-${id}`;
+  framesContainer.appendChild(frame);
+
+  const tabElement = document.createElement("div");
+  tabElement.className = "tab";
+  tabElement.id = `tab-${id}`;
+  tabElement.innerHTML = `
+    <img class="tab-favicon" src="${logo}" alt="" />
+    <span class="tab-title">New Tab</span>
+    <span class="tab-close" title="Close Tab">&times;</span>
+  `;
+
+  const newTabBtn = document.getElementById("new-tab-btn");
+  tabBar.insertBefore(tabElement, newTabBtn);
+
+  const tab: Tab = {
+    id,
+    url: "",
+    history: [],
+    historyIndex: -1,
+    frame,
+    tabElement,
+  };
+
+  tabs.push(tab);
+
+  tabElement.onclick = (e) => {
+    if ((e.target as HTMLElement).classList.contains("tab-close")) {
+      closeTab(id);
+    } else {
+      switchTab(id);
+    }
+  };
+
+  const syncMetadata = () => {
+    try {
+      const win = frame.contentWindow as any;
+      if (!win) return;
+
+      const doc = win.document;
+      if (!doc) return;
+
+      const title = doc.title;
+      const favicon = doc.querySelector("link[rel*='icon']")?.href;
+
+      updateTabMetadata(tab, title, favicon);
+    } catch (err) {}
+  };
+
+  frame.addEventListener("load", () => {
+    syncMetadata();
+    try {
+      const frameHref = frame.contentWindow?.location.href;
+      if (frameHref && frameHref.includes(PREFIX)) {
+        const encodedUrl = frameHref.substring(
+          frameHref.indexOf(PREFIX) + PREFIX.length,
+        );
+        const decodedUrl = (window as any).Ultraviolet.codec.xor.decode(
+          encodedUrl,
+        );
+
+        if (decodedUrl && normalizeUrl(decodedUrl) !== normalizeUrl(tab.url)) {
+          tab.url = decodedUrl;
+          if (activeTab === tab) {
+            urlBar.value = decodedUrl;
+          }
+
+          tab.history = tab.history.slice(0, tab.historyIndex + 1);
+          tab.history.push(decodedUrl);
+          tab.historyIndex++;
+        }
+      }
+    } catch (err) {
+      console.warn("Could not sync iframe URL:", err);
+    }
+  });
+
+  const metadataInterval = setInterval(() => {
+    if (tabs.includes(tab)) {
+      syncMetadata();
+    } else {
+      clearInterval(metadataInterval);
+    }
+  }, 1000);
+
+  loadTab(tab, url, url === homeDataURL);
+  switchTab(id);
+  return tab;
+}
+
+function updateTabMetadata(tab: Tab, title?: string, favicon?: string) {
+  const titleEl = tab.tabElement.querySelector(".tab-title");
+  const faviconEl = tab.tabElement.querySelector(
+    ".tab-favicon",
+  ) as HTMLImageElement;
+
+  if (titleEl) {
+    if (tab.url === homeDataURL || !title) {
+      titleEl.textContent = "Home";
+    } else {
+      titleEl.textContent = title;
+    }
+  }
+
+  if (faviconEl) {
+    if (tab.url === homeDataURL || !favicon) {
+      faviconEl.src = logo;
+    } else {
+      faviconEl.src = favicon;
+    }
+  }
+}
+
+function switchTab(id: string) {
+  const tab = tabs.find((t) => t.id === id);
+  if (!tab) return;
+
+  activeTab = tab;
+
+  document
+    .querySelectorAll(".tab")
+    .forEach((el) => el.classList.remove("active"));
+  tab.tabElement.classList.add("active");
+
+  document
+    .querySelectorAll(".proxy-frame")
+    .forEach((el) => el.classList.remove("active"));
+  tab.frame.classList.add("active");
+
+  urlBar.value = tab.url === homeDataURL ? "" : tab.url;
+}
+
+function closeTab(id: string) {
+  const index = tabs.findIndex((t) => t.id === id);
+  if (index === -1) return;
+
+  const tab = tabs[index];
+  tab.frame.remove();
+  tab.tabElement.remove();
+  tabs.splice(index, 1);
+
+  if (tabs.length === 0) {
+    createTab();
+  } else if (activeTab === tab) {
+    const nextTab = tabs[index] || tabs[index - 1];
+    switchTab(nextTab.id);
+  }
+}
+
+function loadTab(
+  tab: Tab,
   url: string,
   isHome: boolean = false,
   push: boolean = true,
 ) {
   if (push) {
-    history = history.slice(0, index + 1);
-    history.push(url);
-    index++;
+    tab.history = tab.history.slice(0, tab.historyIndex + 1);
+    tab.history.push(url);
+    tab.historyIndex++;
   }
 
-  currentUrl = url;
+  tab.url = url;
 
   if (isHome) {
-    urlBar.value = "";
-    frame.src = homeDataURL;
+    if (activeTab === tab) urlBar.value = "";
+    tab.frame.src = homeDataURL;
   } else {
-    urlBar.value = url;
+    if (activeTab === tab) urlBar.value = url;
     const encodedUrl = (window as any).Ultraviolet.codec.xor.encode(url);
-    frame.src = PREFIX + encodedUrl;
+    tab.frame.src = PREFIX + encodedUrl;
   }
+  updateTabMetadata(tab, isHome ? "Home" : url);
 }
 
 init()
   .then(() => {
-    const frame = document.getElementById("proxy-frame") as HTMLIFrameElement;
-    const urlBar = document.getElementById("url-bar") as HTMLInputElement;
     const goBtn = document.getElementById("go-btn") as HTMLButtonElement;
     const backBtn = document.getElementById("back-btn") as HTMLButtonElement;
     const forwardBtn = document.getElementById(
@@ -224,36 +393,8 @@ init()
     ) as HTMLButtonElement;
     const homeBtn = document.getElementById("home-btn") as HTMLButtonElement;
 
-    frame.addEventListener("load", () => {
-      try {
-        const frameHref = frame.contentWindow?.location.href;
-
-        if (frameHref && frameHref.includes(PREFIX)) {
-          const encodedUrl = frameHref.substring(
-            frameHref.indexOf(PREFIX) + PREFIX.length,
-          );
-          const decodedUrl = (window as any).Ultraviolet.codec.xor.decode(
-            encodedUrl,
-          );
-
-          if (
-            decodedUrl &&
-            normalizeUrl(decodedUrl) !== normalizeUrl(currentUrl)
-          ) {
-            currentUrl = decodedUrl;
-            urlBar.value = decodedUrl;
-
-            history = history.slice(0, index + 1);
-            history.push(decodedUrl);
-            index++;
-          }
-        }
-      } catch (err) {
-        console.warn("Could not sync iframe URL:", err);
-      }
-    });
-
     function navigate(input: string) {
+      if (!activeTab) return;
       input = input.trim();
       if (!input) return;
 
@@ -270,34 +411,35 @@ init()
         targetUrl = "https://duckduckgo.com/?q=" + encodeURIComponent(input);
       }
 
-      load(frame, urlBar, targetUrl, false, true);
+      loadTab(activeTab, targetUrl, false, true);
     }
 
     goBtn.onclick = () => navigate(urlBar.value);
+    newTabBtn.onclick = () => createTab();
 
     urlBar.addEventListener("keydown", (e) => {
       if (e.key === "Enter") navigate(urlBar.value);
     });
 
     backBtn.onclick = () => {
-      if (index > 0) {
-        index--;
-        const target = history[index];
-        load(frame, urlBar, target, target === homeDataURL, false);
+      if (activeTab && activeTab.historyIndex > 0) {
+        activeTab.historyIndex--;
+        const target = activeTab.history[activeTab.historyIndex];
+        loadTab(activeTab, target, target === homeDataURL, false);
       }
     };
 
     forwardBtn.onclick = () => {
-      if (index < history.length - 1) {
-        index++;
-        const target = history[index];
-        load(frame, urlBar, target, target === homeDataURL, false);
+      if (activeTab && activeTab.historyIndex < activeTab.history.length - 1) {
+        activeTab.historyIndex++;
+        const target = activeTab.history[activeTab.historyIndex];
+        loadTab(activeTab, target, target === homeDataURL, false);
       }
     };
 
     homeBtn.onclick = () => {
-      if (currentUrl !== homeDataURL) {
-        load(frame, urlBar, homeDataURL, true, true);
+      if (activeTab && activeTab.url !== homeDataURL) {
+        loadTab(activeTab, homeDataURL, true, true);
       }
     };
 
@@ -315,9 +457,7 @@ init()
     const settingsModal = document.getElementById(
       "settings-modal",
     ) as HTMLDivElement;
-    const wispInput = document.getElementById(
-      "wisp-input",
-    ) as HTMLInputElement;
+    const wispInput = document.getElementById("wisp-input") as HTMLInputElement;
     const settingsSave = document.getElementById(
       "settings-save",
     ) as HTMLButtonElement;
@@ -377,6 +517,6 @@ init()
       }
     });
 
-    load(frame, urlBar, homeDataURL, true, true);
+    createTab();
   })
   .catch(console.error);
