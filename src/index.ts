@@ -10,7 +10,7 @@ import { exportData, importData } from "./app/SettingsManager";
 let bareMuxConnection: any = null;
 
 async function applyTransport(wispUrl: string) {
-  if (!bareMuxConnection) return;
+  if (!bareMuxConnection) return; 
   await bareMuxConnection.setTransport(
     "https://unpkg.com/@mercuryworkshop/libcurl-transport@1/dist/index.mjs",
     [
@@ -23,7 +23,7 @@ async function applyTransport(wispUrl: string) {
 }
 
 async function init() {
-  await navigator.serviceWorker.register("pingas.js");
+  await navigator.serviceWorker.register("pingas.js"); // change *this* 
   await navigator.serviceWorker.ready;
 
   bareMuxConnection = new (window as any).BareMux.BareMuxConnection(

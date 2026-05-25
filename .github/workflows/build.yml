@@ -1,0 +1,40 @@
+name: auto build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: setup runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: install dependencies
+        run: pnpm install
+
+      - name: run build
+        run: pnpm build
+
+      - name: archive artifacts
+        run: |
+          cd dist
+          zip ../build-assets.zip pingas.js index.html
+
+      - name: create release and upload asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.sha }}
+          name: build ${{ github.sha }}
+          files: build-assets.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
