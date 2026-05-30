@@ -262,9 +262,11 @@ if (app) {
       async function initProxySelection() {
         const db = await dbPromise;
         const storedProxyId = await db.get('settings', 'deployable.proxy');
-
+        
         choiceBtns.forEach((btn) => {
-          if (btn.id === storedProxyId) {
+          const shouldSelect = storedProxyId ? btn.id === storedProxyId : btn.id === 'choice-uv';
+          
+          if (shouldSelect) {
             btn.classList.add('selected');
           }
 

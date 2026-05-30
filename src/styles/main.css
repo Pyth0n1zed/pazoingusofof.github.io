@@ -495,9 +495,13 @@ body {
 }
 
 .choice-actions button.selected {
-  border-color: #3b82f6;
-  background-color: #e0f2fe;
-  color: #0369a1;
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.choice-actions button.selected:hover {
+  background: #1d4ed8;
 }
 
 .data-actions {
