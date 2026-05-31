@@ -158,23 +158,23 @@ if (app) {
       gamesSearch.oninput = () => {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
-          // loadGames(gamesSearch.value);
+          loadGames(gamesSearch.value);
           return;
         }, 400);
       };
 
       prevPageBtn.onclick = () => {
-        // const { currentPage, selectedCategory } = getGamesState();
-        // if (currentPage > 1)
-          // loadGames(gamesSearch.value, selectedCategory, currentPage - 1);
-        return;
+        const { currentPage, selectedCategory } = getGamesState();
+        if (currentPage > 1)
+          loadGames(gamesSearch.value, selectedCategory, currentPage - 1);
+        // return;
       };
 
       nextPageBtn.onclick = () => {
-        // const { currentPage, totalPages, selectedCategory } = getGamesState();
-        // if (currentPage < totalPages)
-          // loadGames(gamesSearch.value, selectedCategory, currentPage + 1);
-        return;
+        const { currentPage, totalPages, selectedCategory } = getGamesState();
+        if (currentPage < totalPages)
+          loadGames(gamesSearch.value, selectedCategory, currentPage + 1);
+        // return;
       };
 
       const wispInput = document.getElementById(
