@@ -4,7 +4,7 @@ import { getWispServer, setWispServer } from "./app/utils";
 import { homeDataURL } from "./components/StartPage";
 import { initUI } from "./components/UI";
 import { createTab, getActiveTab, loadTab } from "./app/TabManager";
-// import { loadGames, getGamesState } from "./games/GamesManager";
+import { loadGames, getGamesState } from "./games/GamesManager";
 import { exportData, importData } from "./app/SettingsManager";
 import { openDB } from 'idb';
 
@@ -74,7 +74,7 @@ const app = document.getElementById("app");
 if (app) {
   initUI(app);
 
-  // await (window as any).Lumin.init({ headless: true });
+  await (window as any).Lumin.init({ headless: true });
 
   init()
     .then(() => {
