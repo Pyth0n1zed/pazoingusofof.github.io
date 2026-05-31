@@ -472,6 +472,38 @@ body {
   margin: 0;
 }
 
+.choice-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.choice-actions button {
+  flex: 1;
+  padding: 10px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.choice-actions button:hover {
+  background: #222;
+  border-color: #444;
+}
+
+.choice-actions button.selected {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.choice-actions button.selected:hover {
+  background: #1d4ed8;
+}
+
 .data-actions {
   display: flex;
   gap: 10px;

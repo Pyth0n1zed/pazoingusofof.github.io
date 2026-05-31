@@ -95,4 +95,5 @@ export async function loadGames(query = "", category = "", page = 1) {
   } finally {
     gamesLoader.style.display = "none";
   }
-}
+        }
+  
