@@ -2,120 +2,255 @@ import logo from "../assets/logo.png";
 
 export const startPageHTML = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
     }
     body {
       margin: 0;
-      font-family: "Nunito", sans-serif;
-      background: #111;
-      color: #fff;
+      padding: 0;
+      font-family: 'Product Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 81.25%;
+      background-color: rgba(60,60,60,1); /* Kept exactly as pulled from chromium source */
+      color: #e8eaed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Central Container Box — Shifted down by 40px to simulate the bookmarks bar space */
+    .ntp-content {
+      margin-top: 145px; 
+      width: 100%;
+      max-width: 730px; 
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Chromium Branding Logo Container — adjust margin-bottom to separate from the search box */
+    .logo-container {
+      margin-bottom: 26px;
+      user-select: none;
+    }
+    .logo-container img {
+      width: 275px; 
+      height: auto;
+    }
+
+    /* Search Box Form Wrapper */
+    .search-form {
+      width: 100%;
+    }
+
+    /* Search Box Container — modify height, padding, background, or borders here */
+    .search-box {
+      width: 100%;
+      height: 60px;
+      background-color: #FFFFFF; 
+      border-radius: 100px; 
+      display: flex;
+      align-items: center;
+      padding: 0 20px 0 18px; 
+      box-shadow: 0 1px 6px 0 rgba(32,33,36,0.28);
+      transition: box-shadow 0.1s ease-in-out;
+    }
+    
+    .search-box:hover, .search-box:focus-within {
+      box-shadow: 0 1px 6px 0 rgba(32,33,36,0.3), 0 1px 12px 0 rgba(32,33,36,0.4);
+    }
+    
+    /* Left side icon wrapper — tweak margin-right to space out from the text start */
+    .left-actions {
+      display: flex;
+      align-items: center;
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+    
+    /* Increased by 1 pixel */
+    .plus-icon {
+      width: 21px;
+      height: 21px;
+      fill: #202124; 
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
     }
-    .container {
-      width: 90%;
-      max-width: 680px;
+
+    /* Main Text Input */
+    .search-input {
+      flex: 1;
+      min-width: 0; 
+      height: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #202124; 
+      font-size: 16px;
+      padding: 0;
+      letter-spacing: 0.2px; 
+      overflow: hidden;
+      margin-top: 2px;
+    }
+    .search-input::placeholder {
+      color: #b3b6b9; 
+    }
+
+    /* Right side buttons container — adjust the 'gap' value to separate mic and lens */
+    .right-actions {
+      display: flex;
+      align-items: center;
+      gap: 18px; 
+      padding-left: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Individual action wrapper layouts */
+    .action-icon {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .action-icon svg {
+      width: 100%;
+      height: 100%;
+      fill: #202124; 
+    }
+
+    /* Shortcut Grid Placement — alter margin-top to push the shortcuts further down */
+    .shortcuts-grid {
+      margin-top: 115px; 
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      max-width: 560px;
+    }
+    
+    /* Individual Tile Frame box dimensions */
+    .shortcut-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 112px;
+      height: 112px;
+      border-radius: 4px;
+      padding: 12px 8px 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.15s;
+    }
+    
+    .shortcut-tile:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+    
+    /* Darkened circular background tint */
+    .tile-icon-wrapper {
+      width: 48px;
+      height: 48px;
+      background-color: rgba(0, 0, 0, 0.25);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      transition: background-color 0.15s;
+    }
+    
+    .tile-icon-wrapper svg {
+      width: 20px;
+      height: 20px;
+      fill: #e8eaed;
+    }
+    
+    /* Text Label typography layout */
+    .tile-title {
+      font-size: 13px;
+      font-weight: 400;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
       text-align: center;
     }
-    .logo-container {
-      margin-bottom: 24px;
-    }
-    .logo {
-      width: 400px;
-      max-width: 80%;
-      height: auto;
-      display: block;
-      margin: 0 auto;
-    }
-    h1 {
-      font-size: 34px;
-      margin: 0 0 18px;
-      font-weight: 600;
-    }
-    form {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    input {
-      flex: 1;
-      padding: 14px 16px;
-      font-size: 16px;
-      border: 1px solid #333;
-      border-radius: 8px;
-      background: #1a1a1a;
-      color: #fff;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    input:focus {
-      border-color: #555;
-    }
-    button {
-      padding: 14px 20px;
-      font-size: 16px;
-      border: 1px solid #333;
-      border-radius: 8px;
-      background: #1a1a1a;
-      color: #fff;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover {
-      background: #222;
-    }
-    button:active {
-      background: #2a2a2a;
-    }
-    p {
-      margin-top: 14px;
-      font-size: 13px;
-      color: #aaa;
-    }
-    .discord-link {
-      margin-top: 20px;
-      font-size: 14px;
-      color: #888;
-    }
-    .discord-link a {
-      color: #5865F2;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .discord-link a:hover {
-      text-decoration: underline;
+    
+    .shortcut-tile:hover .tile-title {
+      color: #e8eaed;
     }
   </style>
 </head>
 <body>
-  <div class="container">
+
+  <div class="ntp-content">
     <div class="logo-container">
-      <img src="${logo}" class="logo" alt="Logo" />
+      <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_272x92dp.png" alt="Google" style="user-select: none;" />
     </div>
-    <h1>Search</h1>
-    <form id="search-form">
-      <input id="search-input" type="text" placeholder="Enter URL or search query" autocomplete="off" autofocus />
-      <button type="submit">Go</button>
+
+    <form id="search-form" class="search-form">
+      <div class="search-box">
+        <div class="left-actions">
+          <div class="plus-icon">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          </div>
+        </div>
+
+        <input id="search-input" class="search-input" type="text" placeholder="Search Google" autocomplete="off" autofocus />
+        
+        <div class="right-actions">
+          <div class="action-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+          </div>
+          <div class="action-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+          </div>
+        </div>
+      </div>
     </form>
-    <p>Type a URL or a search query</p>
-    <p class="discord-link">Feedback? <a href="https://discord.gg/VWh8UmD2gv" target="_blank" rel="noopener noreferrer">Join our Discord!</a></p>
+
+    <div class="shortcuts-grid">
+      <div class="shortcut-tile" id="add-shortcut-trigger">
+        <div class="tile-icon-wrapper">
+          <svg viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+        </div>
+        <div class="tile-title">Add shortcut</div>
+      </div>
+    </div>
   </div>
+
   <script>
     const form = document.getElementById("search-form");
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const value = document.getElementById("search-input").value.trim();
-      if (!value) return;
-      parent.postMessage({ type: "navigate", value }, "*");
+      if (value) navigate(value);
     });
+
+    document.getElementById("add-shortcut-trigger").addEventListener("click", () => {
+      console.log("Add shortcut modal layout click wrapper event.");
+    });
+
+    function navigate(value) {
+      parent.postMessage({ type: "navigate", value }, "*");
+    }
   </script>
+
 </body>
 </html>
 `;
