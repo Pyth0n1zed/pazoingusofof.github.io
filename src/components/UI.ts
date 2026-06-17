@@ -1,5 +1,5 @@
-import { exportData, importData, setProxyMode } from "./SettingsManager";
-import { getWispServer, setWispServer } from "./utils";
+import { exportData, importData, setProxyMode } from "../app/SettingsManager";
+import { getWispServer, setWispServer } from "../app/utils";
 
 export const ASSET_PATH = "/assets/chrome";
 
