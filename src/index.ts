@@ -79,24 +79,12 @@ if (app) {
   init()
     .then(() => {
       const urlBar = document.getElementById("url-bar") as HTMLInputElement;
-      const goBtn = document.getElementById("go-btn") as HTMLButtonElement;
       const newTabBtn = document.getElementById(
         "new-tab-btn",
       ) as HTMLButtonElement;
       const backBtn = document.getElementById("back-btn") as HTMLButtonElement;
       const forwardBtn = document.getElementById(
         "forward-btn",
-      ) as HTMLButtonElement;
-      const homeBtn = document.getElementById("home-btn") as HTMLButtonElement;
-
-      const gamesSearch = document.getElementById(
-        "games-search",
-      ) as HTMLInputElement;
-      const prevPageBtn = document.getElementById(
-        "prev-page",
-      ) as HTMLButtonElement;
-      const nextPageBtn = document.getElementById(
-        "next-page",
       ) as HTMLButtonElement;
 
       function navigate(input: string) {
@@ -116,66 +104,44 @@ if (app) {
         loadTab(activeTab, targetUrl, false, true);
       }
 
-      goBtn.onclick = () => navigate(urlBar.value);
-      newTabBtn.onclick = () => createTab();
-      urlBar.onkeydown = (e) => {
-        if (e.key === "Enter") navigate(urlBar.value);
-      };
+      // Only set onclick if elements exist
+      if (newTabBtn) newTabBtn.onclick = () => createTab();
+      
+      if (urlBar) {
+        urlBar.onkeydown = (e) => {
+          if (e.key === "Enter") navigate(urlBar.value);
+        };
+      }
 
-      backBtn.onclick = () => {
-        const activeTab = getActiveTab();
-        if (activeTab && activeTab.historyIndex > 0) {
-          activeTab.historyIndex--;
-          const target = activeTab.history[activeTab.historyIndex];
-          loadTab(activeTab, target, target === homeDataURL, false);
-        }
-      };
+      if (backBtn) {
+        backBtn.onclick = () => {
+          const activeTab = getActiveTab();
+          if (activeTab && activeTab.historyIndex > 0) {
+            activeTab.historyIndex--;
+            const target = activeTab.history[activeTab.historyIndex];
+            loadTab(activeTab, target, target === homeDataURL, false);
+          }
+        };
+      }
 
-      forwardBtn.onclick = () => {
-        const activeTab = getActiveTab();
-        if (
-          activeTab &&
-          activeTab.historyIndex < activeTab.history.length - 1
-        ) {
-          activeTab.historyIndex++;
-          const target = activeTab.history[activeTab.historyIndex];
-          loadTab(activeTab, target, target === homeDataURL, false);
-        }
-      };
-
-      homeBtn.onclick = () => {
-        const activeTab = getActiveTab();
-        if (activeTab && activeTab.url !== homeDataURL)
-          loadTab(activeTab, homeDataURL, true, true);
-      };
+      if (forwardBtn) {
+        forwardBtn.onclick = () => {
+          const activeTab = getActiveTab();
+          if (
+            activeTab &&
+            activeTab.historyIndex < activeTab.history.length - 1
+          ) {
+            activeTab.historyIndex++;
+            const target = activeTab.history[activeTab.historyIndex];
+            loadTab(activeTab, target, target === homeDataURL, false);
+          }
+        };
+      }
 
       window.addEventListener("message", (event) => {
         if (event.data?.type === "navigate")
           navigate(String(event.data.value || ""));
       });
-
-      let searchTimeout: any;
-      gamesSearch.oninput = () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-          loadGames(gamesSearch.value);
-          return;
-        }, 400);
-      };
-
-      prevPageBtn.onclick = () => {
-        const { currentPage, selectedCategory } = getGamesState();
-        if (currentPage > 1)
-          loadGames(gamesSearch.value, selectedCategory, currentPage - 1);
-        // return;
-      };
-
-      nextPageBtn.onclick = () => {
-        const { currentPage, totalPages, selectedCategory } = getGamesState();
-        if (currentPage < totalPages)
-          loadGames(gamesSearch.value, selectedCategory, currentPage + 1);
-        // return;
-      };
 
       const wispInput = document.getElementById(
         "wisp-input",
@@ -191,12 +157,6 @@ if (app) {
       ) as HTMLButtonElement;
       const settingsBtn = document.getElementById(
         "settings-btn",
-      ) as HTMLButtonElement;
-      const arrow = document.getElementById(
-        "arrow",
-      ) as HTMLButtonElement;
-      const nav = document.getElementById(
-        "main-nav",
       ) as HTMLButtonElement;
       const exportBtn = document.getElementById(
         "export-data",
@@ -220,44 +180,47 @@ if (app) {
         '.choice-actions button'
       ) as NodeListOf<HTMLButtonElement>;
 
-      settingsBtn.onclick = () => {
-        wispInput.value = getWispServer();
-        settingsOverlay.style.display = "flex";
-        wispInput.focus();
-      };
-      settingsCancel.onclick = () => (settingsOverlay.style.display = "none");
-      settingsSave.onclick = async () => {
-        const value = wispInput.value.trim();
-        if (!value) return;
-        setWispServer(value);
-        await applyTransport(value);
-        settingsOverlay.style.display = "none";
-        const activeBtn = document.querySelector('.choice-actions button.selected') as HTMLButtonElement | null;
-        if (activeBtn) {
-          const db = await dbPromise;
-          await db.put('settings', activeBtn.id, 'deployable.proxy');
-          console.log('Settings saved to IndexedDB: deployable.proxy:' + activeBtn.id);
-        }
-        window.location.reload();
-      };
-      settingsReset.onclick = () => (wispInput.value = DEFAULT_WISP);
-      settingsOverlay.onclick = (e) => {
-        if (e.target === settingsOverlay)
+      if (settingsBtn && wispInput && settingsOverlay) {
+        settingsBtn.onclick = () => {
+          wispInput.value = getWispServer();
+          settingsOverlay.style.display = "flex";
+          wispInput.focus();
+        };
+      }
+
+      if (settingsCancel) {
+        settingsCancel.onclick = () => {
+          if (settingsOverlay) settingsOverlay.style.display = "none";
+        };
+      }
+
+      if (settingsSave && wispInput && settingsOverlay) {
+        settingsSave.onclick = async () => {
+          const value = wispInput.value.trim();
+          if (!value) return;
+          setWispServer(value);
+          await applyTransport(value);
           settingsOverlay.style.display = "none";
-      };
-      // I know nothing about TypeScript so I'm gonna treat it like JavaScript... And copy the code above me.
-      var open = true;
-      arrow.onclick = () => {
-        if (open === true) {
-          open = false;
-          nav.style.right = "-198px";
-          arrow.innerHTML = "<";
-        } else {
-          open = true;
-          nav.style.right = "10px";
-          arrow.innerHTML = ">";
-        }
-      };
+          const activeBtn = document.querySelector('.choice-actions button.selected') as HTMLButtonElement | null;
+          if (activeBtn) {
+            const db = await dbPromise;
+            await db.put('settings', activeBtn.id, 'deployable.proxy');
+            console.log('Settings saved to IndexedDB: deployable.proxy:' + activeBtn.id);
+          }
+          window.location.reload();
+        };
+      }
+
+      if (settingsReset && wispInput) {
+        settingsReset.onclick = () => (wispInput.value = DEFAULT_WISP);
+      }
+
+      if (settingsOverlay) {
+        settingsOverlay.onclick = (e) => {
+          if (e.target === settingsOverlay)
+            settingsOverlay.style.display = "none";
+        };
+      }
 
       async function initProxySelection() {
         const db = await dbPromise;
@@ -278,12 +241,16 @@ if (app) {
       }
       initProxySelection();
 
-      exportBtn.onclick = exportData;
-      importBtn.onclick = () => importInput.click();
-      importInput.onchange = (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (file) importData(file);
-      };
+      if (exportBtn) exportBtn.onclick = exportData;
+      if (importBtn && importInput) {
+        importBtn.onclick = () => importInput.click();
+      }
+      if (importInput) {
+        importInput.onchange = (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (file) importData(file);
+        };
+      }
 
       createTab();
     })
