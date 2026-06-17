@@ -7,12 +7,16 @@ import logo from "../assets/logo.png";
 import { openDB } from "idb";
 import { sj } from "../index";
 
+// Configure your asset directory mapping here
+export const ASSET_PATH = "/assets/chrome"; 
+
 const dbPromise = openDB('SettingsDB', 1, {
   upgrade(db) {
     db.createObjectStore('settings');
   },
 });
 const db = await dbPromise;
+
 async function proxyFind() {
   return await db.get('settings', 'deployable.proxy');
 }
@@ -25,6 +29,15 @@ let frame;
 export function getTabs() { return tabs; }
 export function getActiveTab() { return activeTab; }
 export function setActiveTab(tab: Tab | null) { activeTab = tab; }
+
+// --- UI EVENT LISTENER BINDING ---
+// Listens to the CustomEvent fired by the UI module
+document.addEventListener("omnibox-submit", ((e: CustomEvent) => {
+    if (activeTab) {
+        loadTab(activeTab, e.detail, false);
+    }
+}) as EventListener);
+
 
 export async function createTab(url: string = homeDataURL) {
   const framesContainer = document.getElementById("frames-container") as HTMLDivElement;
@@ -92,11 +105,11 @@ export async function createTab(url: string = homeDataURL) {
         );
         let decodedUrl;
         if (CURRENT_PROXY === "choice-scram") {
-          const decodedUrl = decodeURIComponent(encodedUrl);
+          decodedUrl = decodeURIComponent(encodedUrl);
+        } else {
+          decodedUrl = (window as any).Ultraviolet.codec.xor.decode(encodedUrl);
         }
-        else {
-          const decodedUrl = (window as any).Ultraviolet.codec.xor.decode(encodedUrl);
-        }
+        
         if (decodedUrl && normalizeUrl(decodedUrl) !== normalizeUrl(tab.url)) {
           tab.url = decodedUrl;
           if (activeTab === tab) urlBar.value = decodedUrl;
@@ -106,7 +119,10 @@ export async function createTab(url: string = homeDataURL) {
           checkLarp(decodedUrl);
         }
       }
-    } catch (err) {}
+    } catch (err) {
+      // Cross-origin failure or timeout hooks can be logged here
+      triggerErrorPage(tab, "Failed to resolve connection.");
+    }
   });
 
   const metadataInterval = setInterval(() => {
@@ -121,28 +137,54 @@ export async function createTab(url: string = homeDataURL) {
 
 export function updateTabMetadata(tab: Tab, title?: string, favicon?: string) {
   const titleEl = tab.tabElement.querySelector(".tab-title");
-  const faviconEl = tab.tabElement.querySelector(
-    ".tab-favicon",
-  ) as HTMLImageElement;
-  if (titleEl)
+  const faviconEl = tab.tabElement.querySelector(".tab-favicon") as HTMLImageElement;
+  
+  if (titleEl) {
     titleEl.textContent = tab.url === homeDataURL || !title ? "Home" : title;
-  if (faviconEl)
+  }
+  
+  // Do not overwrite the favicon if the throbber is currently active
+  if (faviconEl && !faviconEl.src.includes('throbber')) {
     faviconEl.src = tab.url === homeDataURL || !favicon ? logo : favicon;
+  }
 }
+
+// --- NEW STATE HANDLERS ---
+function setTabLoadingState(tab: Tab, isLoading: boolean) {
+  const faviconEl = tab.tabElement.querySelector(".tab-favicon") as HTMLImageElement;
+  if (faviconEl) {
+    // Utilize the standard chromium loading graphic
+    faviconEl.src = isLoading ? `${ASSET_PATH}/throbber_small.svg` : logo;
+  }
+}
+
+function triggerErrorPage(tab: Tab, message: string) {
+  setTabLoadingState(tab, false);
+  // Replaces iframe contents with an internal error string using the picture_delete svg
+  const errorHTML = `
+    <div style="font-family: sans-serif; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #202124;">
+      <img src="${ASSET_PATH}/icon_picture_delete.svg" width="64" style="margin-bottom: 20px; filter: invert(1); opacity: 0.7;">
+      <h2 style="margin:0 0 10px 0; font-weight: normal;">This site can't be reached</h2>
+      <p style="color: #9aa0a6;">${message}</p>
+    </div>
+  `;
+  tab.frame.src = "data:text/html;charset=utf-8," + encodeURIComponent(errorHTML);
+  updateTabMetadata(tab, "Network Error");
+}
+// --------------------------
 
 export function switchTab(id: string) {
   const urlBar = document.getElementById("url-bar") as HTMLInputElement;
   const tab = tabs.find((t) => t.id === id);
   if (!tab) return;
+  
   activeTab = tab;
-  document
-    .querySelectorAll(".tab")
-    .forEach((el) => el.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach((el) => el.classList.remove("active"));
   tab.tabElement.classList.add("active");
-  document
-    .querySelectorAll(".proxy-frame")
-    .forEach((el) => el.classList.remove("active"));
+  
+  document.querySelectorAll(".proxy-frame").forEach((el) => el.classList.remove("active"));
   tab.frame.classList.add("active");
+  
   urlBar.value = tab.url === homeDataURL ? "" : tab.url;
 }
 
@@ -150,9 +192,11 @@ export function closeTab(id: string) {
   const index = tabs.findIndex((t) => t.id === id);
   if (index === -1) return;
   const tab = tabs[index];
+  
   tab.frame.remove();
   tab.tabElement.remove();
   tabs.splice(index, 1);
+  
   if (tabs.length === 0) createTab();
   else if (activeTab === tab) {
     const nextTab = tabs[index] || tabs[index - 1];
@@ -167,26 +211,28 @@ export function loadTab(
   push: boolean = true,
 ) {
   const urlBar = document.getElementById("url-bar") as HTMLInputElement;
+  
   if (push) {
     tab.history = tab.history.slice(0, tab.historyIndex + 1);
     tab.history.push(url);
     tab.historyIndex++;
   }
   tab.url = url;
+  
   if (isHome) {
     if (activeTab === tab) urlBar.value = "";
     tab.frame.src = homeDataURL;
   } else {
     if (activeTab === tab) urlBar.value = url;
+    setTabLoadingState(tab, true); // Trigger animation sequence
+    
     let encodedUrl: string;
-    // console.log(CURRENT_PROXY);
     if (CURRENT_PROXY === "choice-scram") {
       encodedUrl = encodeURIComponent(url);
-    }
-    else {
+    } else {
       encodedUrl = (window as any).Ultraviolet.codec.xor.encode(url);
     }
-    // console.log(encodedUrl);
+    
     tab.frame.src = PREFIX + encodedUrl;
     checkLarp(url);
   }
