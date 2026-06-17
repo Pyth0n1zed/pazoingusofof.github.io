@@ -25,17 +25,16 @@ export function initUI(app: HTMLElement) {
   app.innerHTML = `
     <style>
       :root {
-        --chrome-bg: #202124;
-        --chrome-toolbar: #303134;
-        --chrome-tab-active: #303134;
-        --chrome-tab-hover: rgba(255,255,255,0.06);
-        --chrome-tab-text: #e8eaed;
-        --chrome-tab-text-dim: #9aa0a6;
-        --chrome-omnibox: #303134;
-        --chrome-omnibox-hover: #3c4043;
-        --chrome-border: rgba(255,255,255,0.08);
-        --chrome-shadow: 0 1px 0 rgba(0,0,0,0.4);
-        --chrome-pill: 999px;
+        --cr-frame-bg: #222222;
+        --cr-toolbar-bg: rgba(60,60,60,1);
+        --cr-omnibox-bg: #222222;
+        --cr-omnibox-hover: rgb(75, 75, 75);
+        --cr-text-primary: #e3e3e3;
+        --cr-text-secondary: #c7c7c7;
+        --cr-hover-bg: rgba(255, 255, 255, 0.08);
+        --cr-active-bg: rgba(255, 255, 255, 0.12);
+        --cr-border-radius-pill: 999px;
+        --cr-border-radius-tab: 10px 10px 0 0;
       }
 
       * { box-sizing: border-box; }
@@ -45,7 +44,7 @@ export function initUI(app: HTMLElement) {
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background: var(--chrome-bg);
+        background: var(--cr-frame-bg);
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
@@ -63,14 +62,14 @@ export function initUI(app: HTMLElement) {
       #browser-root {
         display: flex;
         flex-direction: column;
-        background: var(--chrome-bg);
+        background: var(--cr-frame-bg);
       }
 
       #chrome-ui-wrapper {
         display: flex;
         flex-direction: column;
-        background: var(--chrome-bg);
-        box-shadow: var(--chrome-shadow);
+        background: var(--cr-frame-bg);
+        box-shadow: 0 1px 0 rgba(0,0,0,0.4);
         z-index: 4;
       }
 
@@ -79,7 +78,7 @@ export function initUI(app: HTMLElement) {
         display: flex;
         align-items: flex-end;
         padding: 0 6px 0 6px;
-        background: var(--chrome-bg);
+        background: var(--cr-frame-bg);
         border-bottom: 1px solid rgba(255,255,255,0.04);
       }
 
@@ -102,10 +101,9 @@ export function initUI(app: HTMLElement) {
         gap: 8px;
         padding: 0 10px 0 12px;
         border: 0;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
+        border-radius: var(--cr-border-radius-tab);
         background: transparent;
-        color: var(--chrome-tab-text-dim);
+        color: var(--cr-text-secondary);
         position: relative;
         cursor: pointer;
         flex: 0 1 auto;
@@ -117,12 +115,12 @@ export function initUI(app: HTMLElement) {
       }
 
       .tab:hover {
-        background: var(--chrome-tab-hover);
+        background: var(--cr-hover-bg);
       }
 
       .tab.active {
-        background: var(--chrome-tab-active);
-        color: var(--chrome-tab-text);
+        background: var(--cr-toolbar-bg);
+        color: var(--cr-text-primary);
         z-index: 3;
         transform: translateY(0);
       }
@@ -139,12 +137,12 @@ export function initUI(app: HTMLElement) {
 
       .tab.active::before {
         left: -10px;
-        background: radial-gradient(circle at 0 0, transparent 10px, var(--chrome-tab-active) 10px);
+        background: radial-gradient(circle at 0 0, transparent 10px, var(--cr-toolbar-bg) 10px);
       }
 
       .tab.active::after {
         right: -10px;
-        background: radial-gradient(circle at 100% 0, transparent 10px, var(--chrome-tab-active) 10px);
+        background: radial-gradient(circle at 100% 0, transparent 10px, var(--cr-toolbar-bg) 10px);
       }
 
       .tab-enter {
@@ -191,7 +189,7 @@ export function initUI(app: HTMLElement) {
       }
 
       .tab-close:hover {
-        background: rgba(255,255,255,0.12);
+        background: var(--cr-active-bg);
         opacity: 1;
       }
 
@@ -201,21 +199,30 @@ export function initUI(app: HTMLElement) {
         border: 0;
         border-radius: 50%;
         background: transparent;
-        color: var(--chrome-tab-text);
+        color: var(--cr-text-primary);
         font-size: 22px;
         line-height: 1;
         margin-bottom: 2px;
         cursor: pointer;
         flex: 0 0 auto;
         transition: background-color 120ms ease, transform 120ms ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       #new-tab-btn:hover {
-        background: rgba(255,255,255,0.08);
+        background: var(--cr-hover-bg);
       }
 
       #new-tab-btn:active {
         transform: scale(0.96);
+      }
+
+      #new-tab-btn svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
       }
 
       #topbar {
@@ -224,7 +231,7 @@ export function initUI(app: HTMLElement) {
         align-items: center;
         gap: 6px;
         padding: 0 8px;
-        background: var(--chrome-bg);
+        background: var(--cr-toolbar-bg);
         border-bottom: 1px solid rgba(255,255,255,0.04);
       }
 
@@ -251,7 +258,7 @@ export function initUI(app: HTMLElement) {
       }
 
       .toolbar-btn:hover {
-        background-color: rgba(255,255,255,0.08);
+        background-color: var(--cr-hover-bg);
       }
 
       .toolbar-btn:active {
@@ -275,15 +282,15 @@ export function initUI(app: HTMLElement) {
         align-items: center;
         gap: 10px;
         padding: 0 12px;
-        border-radius: var(--chrome-pill);
-        background: var(--chrome-omnibox);
+        border-radius: var(--cr-border-radius-pill);
+        background: var(--cr-omnibox-bg);
         border: 1px solid transparent;
         transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
         min-width: 0;
       }
 
       .omnibox-shell:hover {
-        background: var(--chrome-omnibox-hover);
+        background: var(--cr-omnibox-hover);
       }
 
       .omnibox-shell:focus-within {
@@ -303,7 +310,7 @@ export function initUI(app: HTMLElement) {
         border: 0;
         outline: none;
         background: transparent;
-        color: var(--chrome-tab-text);
+        color: var(--cr-text-primary);
         font-size: 13px;
         width: 100%;
         min-width: 0;
@@ -311,13 +318,13 @@ export function initUI(app: HTMLElement) {
       }
 
       #url-bar::placeholder {
-        color: #9aa0a6;
+        color: var(--cr-text-secondary);
       }
 
       #frames-container {
         flex: 1;
         position: relative;
-        background: var(--chrome-toolbar);
+        background: var(--cr-toolbar-bg);
       }
 
       .proxy-frame {
@@ -353,8 +360,8 @@ export function initUI(app: HTMLElement) {
         width: min(460px, calc(100vw - 24px));
         border-radius: 14px;
         padding: 22px;
-        background: var(--chrome-toolbar);
-        color: var(--chrome-tab-text);
+        background: var(--cr-toolbar-bg);
+        color: var(--cr-text-primary);
         border: 1px solid rgba(255,255,255,0.08);
         box-shadow: 0 18px 60px rgba(0,0,0,0.45);
         animation: modalPop 150ms ease;
@@ -373,7 +380,7 @@ export function initUI(app: HTMLElement) {
       .settings-section label {
         display: block;
         margin-bottom: 8px;
-        color: #bdc1c6;
+        color: var(--cr-text-secondary);
         font-size: 13px;
       }
 
@@ -382,8 +389,8 @@ export function initUI(app: HTMLElement) {
         border: 1px solid rgba(255,255,255,0.16);
         border-radius: 8px;
         padding: 9px 12px;
-        background: var(--chrome-bg);
-        color: var(--chrome-tab-text);
+        background: var(--cr-frame-bg);
+        color: var(--cr-text-primary);
         outline: none;
       }
 
@@ -394,7 +401,7 @@ export function initUI(app: HTMLElement) {
       .settings-hint {
         margin: 7px 0 0 0;
         font-size: 11.5px;
-        color: #9aa0a6;
+        color: var(--cr-text-secondary);
       }
 
       .choice-actions,
@@ -408,15 +415,15 @@ export function initUI(app: HTMLElement) {
       .data-actions button {
         border: 1px solid rgba(255,255,255,0.16);
         border-radius: 8px;
-        background: var(--chrome-bg);
-        color: var(--chrome-tab-text);
+        background: var(--cr-frame-bg);
+        color: var(--cr-text-primary);
         padding: 7px 12px;
         cursor: pointer;
       }
 
       .choice-actions button:hover,
       .data-actions button:hover {
-        background: rgba(255,255,255,0.08);
+        background: var(--cr-hover-bg);
       }
 
       .settings-actions {
@@ -447,11 +454,11 @@ export function initUI(app: HTMLElement) {
 
       #settings-cancel {
         background: transparent;
-        color: var(--chrome-tab-text);
+        color: var(--cr-text-primary);
       }
 
       #settings-cancel:hover {
-        background: rgba(255,255,255,0.08);
+        background: var(--cr-hover-bg);
       }
 
       .primary-btn {
@@ -491,7 +498,12 @@ export function initUI(app: HTMLElement) {
           <div id="chrome-ui-wrapper">
             <div id="tab-strip-container">
               <div id="tab-bar">
-                <button id="new-tab-btn" type="button" title="New tab" aria-label="New tab">+</button>
+                <button id="new-tab-btn" type="button" title="New tab" aria-label="New tab">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </button>
               </div>
             </div>
 
